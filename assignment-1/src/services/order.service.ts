@@ -1,9 +1,14 @@
 import fs from "node:fs/promises"
 import type { Order, OrderWeatherResult } from "../types/order.types.js";
-import { DELAY_WEATHER_CONDITIONS } from "./weather.service.js";
+import { WeatherResponse } from "../types/weather.types.js";
 
-function shouldDelayDelivery(weatherCondition: string): boolean {
-    return DELAY_WEATHER_CONDITIONS.includes(weatherCondition as (typeof DELAY_WEATHER_CONDITIONS)[number]);
+export function shouldDelayDelivery(weather: WeatherResponse["weather"][number]):boolean{
+    const {id,main}=weather
+    if (typeof id === "number" && !Number.isNaN(id)) {
+        if (id === 800 || (id >= 801 && id <= 804)) return false;
+        return true;
+    }
+    return main !== "Clear" && main !== "Clouds";
 }
 
 export async function getOrders():Promise<Order[]>{
@@ -21,12 +26,26 @@ export function updateOrders(results:OrderWeatherResult[]):Order[]{
    return results.map((result)=>{
     const {order,weather}=result
     if(!weather) return order
-    const weatherCondition=weather.weather[0]?.main
-    if(!weatherCondition) return order
-    const isDelayed=shouldDelayDelivery(weatherCondition)
-    return {
-        ...order,
-        status:isDelayed?"Delayed":order.status
-    }
+    const entry=weather.weather[0]
+    if(!entry || !shouldDelayDelivery(entry)) return order
+    return { ...order, status: "Delayed", delayReason: entry.description };
    })
+}
+
+export async function saveOrders(orders:Order[]):Promise<void>{
+    try{
+        const data=JSON.stringify(orders,null,2)
+        await fs.writeFile("updated_orders.json",data,"utf-8")
+        console.log("\nUpdated orders saved to updated_orders.json")
+    }catch(error){
+        console.error("Error saving orders:",error);
+        throw error
+    }
+}
+
+export function generateApology(
+    name: string,
+    city: string,
+    weatherDescription: string): string {
+    return `Hi ${name}, your request to deliver to ${city} is delayed due to ${weatherDescription}.`;
 }

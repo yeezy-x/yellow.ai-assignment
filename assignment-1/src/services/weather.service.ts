@@ -2,16 +2,13 @@ import { env } from "../config/env.js";
 import { Order, OrderWeatherResult } from "../types/order.types.js";
 import type { WeatherResponse } from "../types/weather.types.js";
 
-export const DELAY_WEATHER_CONDITIONS = ["Rain","Snow","Extreme"] as const;
-
 export async function getWeather(city:string):Promise<WeatherResponse>{
     const url=`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${env.OPENWEATHER_API_KEY}&units=metric`
     const response=await fetch(url)
     if(!response.ok){
         throw new Error(`Failed to fetch weather data for ${city}`)
     }
-    const data:WeatherResponse=await response.json()
-    return data
+    return (await response.json()) as WeatherResponse;
 }
 
 export async function getWeatherForOrders(orders: Order[]): Promise<OrderWeatherResult[]> {

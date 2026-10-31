@@ -5,6 +5,7 @@ export interface Order{
     customer:string;
     city:string
     status:"Pending"|"Delayed"
+    delayReason?:string
 }
 
 export interface OrderWeatherResult{
