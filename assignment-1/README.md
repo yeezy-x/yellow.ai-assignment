@@ -140,7 +140,3 @@ assignment-1/
 - OpenWeatherMap Current Weather API (`/data/2.5/weather`)
 - `dotenv` for environment variables
 - `tsx` for local development
-
-## AI development
-
-See `AI-LOG.md` for prompts and notes from AI-assisted development (if submitted with the assignment).
